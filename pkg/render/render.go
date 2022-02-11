@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/TheKinng96/Go-basic-server/models"
 	"github.com/TheKinng96/Go-basic-server/pkg/config"
 )
 
@@ -17,9 +18,18 @@ func NewTemplate(a *config.AppConfig) {
 	app = a
 }
 
+func AddDefaultData(td *models.TemplateData) *models.TemplateData {
+	return td
+}
+
 // Render template using html
-func RenderTemplate(w http.ResponseWriter, html string) {
-	tc := app.TemplateCache
+func RenderTemplate(w http.ResponseWriter, html string, td *models.TemplateData) {
+	var tc map[string]*template.Template
+	if app.UseCache {
+		tc = app.TemplateCache
+	} else {
+		tc, _ = CreateTemplateCache()
+	}
 
 	t, ok := tc[html]
 	if !ok {
@@ -27,7 +37,9 @@ func RenderTemplate(w http.ResponseWriter, html string) {
 	}
 
 	buf := new(bytes.Buffer)
-	_ = t.Execute(buf, nil)
+
+	td = AddDefaultData(td)
+	_ = t.Execute(buf, td)
 
 	_, err := buf.WriteTo(w)
 	if err != nil {
