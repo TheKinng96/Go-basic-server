@@ -1,17 +1,37 @@
 package render
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/TheKinng96/Go-basic-server/pkg/config"
 )
 
-func RenderTemplate(w http.ResponseWriter, html string) {
+var app *config.AppConfig
 
-	_, err := RenderTemplateTest(w)
+func NewTemplate(a *config.AppConfig) {
+	app = a
+}
+
+// Render template using html
+func RenderTemplate(w http.ResponseWriter, html string) {
+	tc := app.TemplateCache
+
+	t, ok := tc[html]
+	if !ok {
+		log.Fatal("Could not get template from template cache")
+	}
+
+	buf := new(bytes.Buffer)
+	_ = t.Execute(buf, nil)
+
+	_, err := buf.WriteTo(w)
 	if err != nil {
-		fmt.Println("Error getting template cache: ", err)
+		fmt.Println("Error writing template to browser ", err)
 	}
 
 	parsedTemplate, _ := template.ParseFiles("./views/" + html)
@@ -24,7 +44,8 @@ func RenderTemplate(w http.ResponseWriter, html string) {
 
 var functions = template.FuncMap{}
 
-func RenderTemplateTest(w http.ResponseWriter) (map[string]*template.Template, error) {
+// Create a template cache as a map
+func CreateTemplateCache() (map[string]*template.Template, error) {
 	myCache := map[string]*template.Template{}
 
 	pages, err := filepath.Glob("./views/*.page.html")
@@ -34,8 +55,6 @@ func RenderTemplateTest(w http.ResponseWriter) (map[string]*template.Template, e
 
 	for _, page := range pages {
 		name := filepath.Base(page)
-		fmt.Println("Page is currently: ", page)
-
 		ts, err := template.New(name).Funcs(functions).ParseFiles(page)
 		if err != nil {
 			return myCache, err
