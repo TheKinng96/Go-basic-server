@@ -12,6 +12,8 @@ import (
 	"github.com/TheKinng96/Go-basic-server/pkg/config"
 )
 
+var functions = template.FuncMap{}
+
 var app *config.AppConfig
 
 func NewTemplate(a *config.AppConfig) {
@@ -45,16 +47,7 @@ func RenderTemplate(w http.ResponseWriter, html string, td *models.TemplateData)
 	if err != nil {
 		fmt.Println("Error writing template to browser ", err)
 	}
-
-	parsedTemplate, _ := template.ParseFiles("./views/" + html)
-	err = parsedTemplate.Execute(w, nil)
-	if err != nil {
-		fmt.Println("Error parsing template: ", err)
-		return
-	}
 }
-
-var functions = template.FuncMap{}
 
 // Create a template cache as a map
 func CreateTemplateCache() (map[string]*template.Template, error) {
