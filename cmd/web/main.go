@@ -4,16 +4,31 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/TheKinng96/Go-basic-server/pkg/config"
 	"github.com/TheKinng96/Go-basic-server/pkg/controllers"
 	"github.com/TheKinng96/Go-basic-server/pkg/render"
+	"github.com/alexedwards/scs/v2"
 )
 
 const portNumber = ":8000"
 
+var app config.AppConfig
+var session *scs.SessionManager
+
 func main() {
-	var app config.AppConfig
+	// Update the env
+	app.InProduction = false
+
+	session = scs.New()
+	// How long to keep user logged in
+	session.Lifetime = 24 * time.Hour
+	session.Cookie.Persist = true
+	session.Cookie.SameSite = http.SameSiteLaxMode
+	session.Cookie.Secure = app.InProduction
+
+	app.Session = session
 
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
